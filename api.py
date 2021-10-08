@@ -153,6 +153,7 @@ def handle_dialog(req, res):
         }
         res['response']['text'] = 'Привет! Я - умный трекер времени. Скажите мне, чем хотели бы заняться сейчас, и я засеку время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу.'
         res['response']['buttons'] = get_suggests(user_id)
+        res['user_state_update'] = {}
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
         res['user_state_update']['new'] = 'no'
         return
@@ -171,20 +172,24 @@ def handle_dialog(req, res):
         }
         res['response']['text'] = 'Привет! А я вас помню! Чем займёмся сегодня?'
         res['response']['buttons'] = get_suggests(user_id)
+        res['user_state_update'] = {}
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
 
 
     user0.thingsStatistics = req['state']['user'].get('0', {})
     user0.lastThingName = req['state']['user'].get('1', '')
     user0.timeStop()
-    res['user_state_update']['count'] = str(int(req['state']['user'].get('count', '0'))+1)
+
+
     if req['state']['user'].get('2', '') != datetime.now(IST).isoformat()[:10]:
         # cur = datetime.now(IST).isoformat()
         print("It's next day")
         tr = list(user0.thingsStatistics.keys())
         for key in tr.copy():
             user0.removeThing(key)
-        res['user_state_update'] = {'0': user0.thingsStatistics, '1': user0.lastThingName, '2': datetime.now(IST).isoformat()[:10]}
+        res['user_state_update']['0'] = user0.thingsStatistics
+        res['user_state_update']['1'] = user0.lastThingName
+        res['user_state_update']['2'] datetime.now(IST).isoformat()[:10]
     # Обрабатываем ответ пользователя.
     if req['request']['original_utterance'].lower() in [
         "остановить",
@@ -193,13 +198,15 @@ def handle_dialog(req, res):
     ]:
         if not user0.thingsStatistics:
             res['response']['text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали."
-            res['user_state_update'] = {'0': user0.thingsStatistics, '1': ''}
+            res['user_state_update']['0'] = user0.thingsStatistics
+            res['user_state_update']['1'] = ''
             res['response']['buttons'] = get_suggests(user_id)
             return
         res['response']['text'] = "Готово. Статистика на сегодня: \n"
         for key, value in user0.thingsStatistics.items():
             res['response']['text'] += str(key) + ' --- ' + str(value)+'\n'
-        res['user_state_update'] = {'0': user0.thingsStatistics, '1': ''}
+        res['user_state_update']['0'] = user0.thingsStatistics
+        res['user_state_update']['1'] = ''
         res['response']['buttons'] = get_suggests(user_id)
         return
     if req['request']['original_utterance'].lower() in [
@@ -209,13 +216,15 @@ def handle_dialog(req, res):
         # прощаемся.
         if not user0.thingsStatistics:
             res['response']['text'] = "Вы сегодня ничего не делали."
-            res['user_state_update'] = {'0': user0.thingsStatistics, '1': ''}
+            res['user_state_update']['0'] = user0.thingsStatistics
+            res['user_state_update']['1'] = ''
             res['response']['end_session'] = True
             return
         res['response']['text'] = "Статистика на сегодня: \n"
         for key, value in user0.thingsStatistics.items():
             res['response']['text'] += str(key) + ' --- ' + str(value)+'\n'
-        res['user_state_update'] = {'0': user0.thingsStatistics, '1': ''}
+        res['user_state_update']['0'] = user0.thingsStatistics
+        res['user_state_update']['1'] = ''
         res['response']['end_session'] = True
         return
     if req['request']['original_utterance'].lower() in [
@@ -225,20 +234,23 @@ def handle_dialog(req, res):
         if not user0.thingsStatistics:
             res['response']['text'] = "Вы сегодня ничего ещё не делали."
             res['response']['buttons'] = get_suggests(user_id)
-            res['user_state_update'] = {'0': user0.thingsStatistics, '1': user0.lastThingName}
+            res['user_state_update']['0'] = user0.thingsStatistics
+            res['user_state_update']['1'] = user0.lastThingName
             return
         res['response']['text'] = "Статистика на сегодня: \n"
         for key, value in user0.thingsStatistics.items():
             res['response']['text'] += str(key) + ' --- ' + str(value)+'\n'
         res['response']['buttons'] = get_suggests(user_id)
-        res['user_state_update'] = {'0': user0.thingsStatistics, '1': user0.lastThingName}
+        res['user_state_update']['0'] = user0.thingsStatistics
+        res['user_state_update']['1'] = user0.lastThingName
         return
     q = req['request']['original_utterance'].lower().split()
     if "замени" in q:
         user0.changeThing(q[1], q[3])
         res['response']['text'] = "Готово"
         res['response']['buttons'] = get_suggests(user_id)
-        res['user_state_update'] = {'0': user0.thingsStatistics, '1': user0.lastThingName}
+        res['user_state_update']['0'] = user0.thingsStatistics
+        res['user_state_update']['1'] = user0.lastThingName
         return
     if ("удали" in q) or ("удалить" in q):
         if (q[1] == "всё") or (q[1] == "все"):
@@ -252,13 +264,15 @@ def handle_dialog(req, res):
             user0.removeThing(tt[:-1])
         res['response']['text'] = "Готово"
         res['response']['buttons'] = get_suggests(user_id)
-        res['user_state_update'] = {'0': user0.thingsStatistics, '1': user0.lastThingName}
+        res['user_state_update']['0'] = user0.thingsStatistics
+        res['user_state_update']['1'] = user0.lastThingName
         return
     user0.addThing(req['request']['original_utterance'].lower())
     res['response']['text'] = "Готово! Дело под названием %s добавлено в список. Время пошло!" % (
         req['request']['original_utterance'])
     res['response']['buttons'] = get_suggests(user_id)
-    res['user_state_update'] = {'0': user0.thingsStatistics, '1': user0.lastThingName}
+    res['user_state_update']['0'] = user0.thingsStatistics
+    res['user_state_update']['1'] = user0.lastThingName
 # Функция возвращает две подсказки для ответа.
 
 
