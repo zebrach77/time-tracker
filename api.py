@@ -177,7 +177,7 @@ def handle_dialog(req, res):
         res['user_state_update'] = {}
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
         return
-
+    res['user_state_update'] = {}
     user0.thingsStatistics = req['state']['user'].get('0', {})
     user0.lastThingName = req['state']['user'].get('1', '')
     user0.timeStop()
