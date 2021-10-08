@@ -62,7 +62,8 @@ class Computing:
     def __init__(self):
         self.thingsStatistics = {}
         self.timeA = time.time()
-        # self.lastThingName = ''
+        self.timeB = time.time()
+        self.lastThingName = ''
 
     def addThing(self, thingName):
         self.timeReset()
@@ -123,6 +124,20 @@ class Computing:
 
     def timeReset(self):
         self.timeA = time.time()
+    def secsToTime(self, thingName):
+        secs_all = self.thingsStatistics.get(thingName, 0)
+        tm = ''
+        secs = secs_all % 60
+        mins = secs_all // 60
+        hours = secs_all // 3600
+        if hours:
+            tm += "%s часов, " % hours
+        if mins:
+            tm += "%s минут, " % mins
+        if secs:
+            tm += "%s секунд" % secs
+        return tm
+
 
 
 # Функция для непосредственной обработки диалога.
@@ -163,7 +178,7 @@ def handle_dialog(req, res):
     elif req['session']['new']:
         sessionStorage[user_id] = {
             'suggests': [
-                "Как пользоваться?" if req['state']['user'].get('count', '0') == '0' else None,
+                "Как пользоваться?" if req['state']['user'].get('count', '0') == '0' else None, #TODO: Write documentation on russian
                 "Уборка",
                 "Учёба",
                 "Работа",
@@ -207,7 +222,7 @@ def handle_dialog(req, res):
             return
         res['response']['text'] = "Готово. Статистика на сегодня: \n"
         for key, value in user0.thingsStatistics.items():
-            res['response']['text'] += str(key) + ' --- ' + str(value) + '\n'
+            res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(value) + '\n'
         res['user_state_update']['0'] = user0.thingsStatistics
         res['user_state_update']['1'] = ''
         res['response']['buttons'] = get_suggests(user_id)
