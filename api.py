@@ -159,7 +159,7 @@ def handle_dialog(req, res):
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
         res['user_state_update']['new'] = 'no'
         return
-    else:
+    elif req['session']['new']:
         sessionStorage[user_id] = {
             'suggests': [
                 "Как пользоваться?" if req['state']['user'].get('count', '0') == '0' else None,
@@ -176,6 +176,7 @@ def handle_dialog(req, res):
         res['response']['buttons'] = get_suggests(user_id)
         res['user_state_update'] = {}
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
+        return
 
     user0.thingsStatistics = req['state']['user'].get('0', {})
     user0.lastThingName = req['state']['user'].get('1', '')
