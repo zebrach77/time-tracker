@@ -8,7 +8,6 @@ import time
 import random
 from datetime import datetime
 import pytz
-import sec as sec
 
 from flask import Flask, request
 import pymongo
@@ -153,11 +152,11 @@ class Computing:
         mins = secs_all // 60
         hours = secs_all // 3600
         if hours:
-            tm += "%s %s, " % hours % self.h(hours%10)
+            tm += "%d %s, " % (hours, self.h(hours%10))
         if mins:
-            tm += "%s %s, " % mins % self.m(mins%10)
+            tm += "%d %s, " % (mins, self.m(mins%10))
         if secs:
-            tm += "%s %s" % secs % self.s(secs%10)
+            tm += "%d %s" % (secs, self.s(secs%10))
         return tm
 
 
