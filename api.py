@@ -156,6 +156,7 @@ def handle_dialog(req, res):
                       'время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу. '
         res['response']['buttons'] = get_suggests(user_id)
         res['user_state_update'] = {}
+        res['user_state_update']['1'] = ''
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
         res['user_state_update']['new'] = 'no'
         return
@@ -175,6 +176,7 @@ def handle_dialog(req, res):
         res['response']['text'] = 'Привет! А я вас помню! Чем займёмся сегодня?'
         res['response']['buttons'] = get_suggests(user_id)
         res['user_state_update'] = {}
+        res['user_state_update']['1'] = ''
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
         return
     res['user_state_update'] = {}
