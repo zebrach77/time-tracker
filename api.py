@@ -125,7 +125,7 @@ class Computing:
     def timeReset(self):
         self.timeA = time.time()
     def secsToTime(self, thingName):
-        secs_all = self.thingsStatistics.get(thingName, 0)
+        secs_all = self.thingsStatistics.get(thingName.lower(), 0)
         tm = ''
         secs = secs_all % 60
         mins = secs_all // 60
