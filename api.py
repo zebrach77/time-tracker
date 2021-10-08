@@ -6,15 +6,17 @@ import json
 import logging
 import time
 import random
+from datetime import datetime
 import pytz
 
 from flask import Flask, request
 import pymongo
-from datetime import datetime
+
+
 
 IST = pytz.timezone('Europe/Moscow')
-cur = datetime.now(IST).isoformat()
-print(cur[:10])
+# cur = datetime.now(IST).isoformat()
+# print(cur[:10])
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 # Хранилище данных о сессиях.
@@ -128,7 +130,7 @@ user0 = Computing()
 
 
 def handle_dialog(req, res):
-    global user0, cur
+    global user0
     user_id = req['session']['user_id']
     if req['session']['new']:
         # Это новый пользователь.
@@ -150,18 +152,18 @@ def handle_dialog(req, res):
         }
         res['response']['text'] = 'Привет! Я - умный трекер времени. Скажите мне, чем хотели бы заняться сейчас, и я засеку время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу.'
         res['response']['buttons'] = get_suggests(user_id)
+        res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
         return
     user0.thingsStatistics = req['state']['user'].get('0', {})
     user0.lastThingName = req['state']['user'].get('1', '')
-    # if user0.lastThingName:
     user0.timeStop()
-    if cur[:10] != datetime.now(IST).isoformat()[:10]:
-        cur = datetime.now(IST).isoformat()
+    if req['state']['user'].get('2', '') != datetime.now(IST).isoformat()[:10]:
+        # cur = datetime.now(IST).isoformat()
         print("It's next day")
         tr = list(user0.thingsStatistics.keys())
         for key in tr.copy():
             user0.removeThing(key)
-        res['user_state_update'] = {'0': user0.thingsStatistics, '1': user0.lastThingName}
+        res['user_state_update'] = {'0': user0.thingsStatistics, '1': user0.lastThingName, '2': datetime.now(IST).isoformat()[:10]}
     # Обрабатываем ответ пользователя.
     if req['request']['original_utterance'].lower() in [
         "остановить",
