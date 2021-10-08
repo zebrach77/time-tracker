@@ -24,7 +24,9 @@ client = pymongo.MongoClient(
     "@tt.3nzl5.mongodb.net/tt?retryWrites=true&w=majority")
 db = client['tt']
 myCollection = db.myCollection
-
+def popf(l, el):
+    l.remove(el)
+    return l
 
 # for i in range(10):
 #     print('\n')
@@ -165,6 +167,20 @@ class Computing:
 user0 = Computing()
 
 
+def stopR(res, user0):
+    if not user0.thingsStatistics:
+        res['response']['text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали."
+        res['user_state_update']['0'] = user0.thingsStatistics
+        res['user_state_update']['1'] = ''
+        return res
+    res['response']['text'] = "Готово. Статистика на сегодня: \n"
+    for key, value in user0.thingsStatistics.items():
+        res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(key) + '\n'
+    res['user_state_update']['0'] = user0.thingsStatistics
+    res['user_state_update']['1'] = ''
+    return res
+
+
 def handle_dialog(req, res):
     global user0
     user_id = req['session']['user_id']
@@ -235,17 +251,19 @@ def handle_dialog(req, res):
         "стоп",
         "останови",
     ]:
-        if not user0.thingsStatistics:
-            res['response']['text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали."
-            res['user_state_update']['0'] = user0.thingsStatistics
-            res['user_state_update']['1'] = ''
-            res['response']['buttons'] = get_suggests(user_id)
-            return
-        res['response']['text'] = "Готово. Статистика на сегодня: \n"
-        for key, value in user0.thingsStatistics.items():
-            res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(key) + '\n'
-        res['user_state_update']['0'] = user0.thingsStatistics
-        res['user_state_update']['1'] = ''
+        # if not user0.thingsStatistics:
+        #     res['response']['text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали."
+        #     res['user_state_update']['0'] = user0.thingsStatistics
+        #     res['user_state_update']['1'] = ''
+        #     res['response']['buttons'] = get_suggests(user_id)
+        #     return
+        # res['response']['text'] = "Готово. Статистика на сегодня: \n"
+        # for key, value in user0.thingsStatistics.items():
+        #     res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(key) + '\n'
+        # res['user_state_update']['0'] = user0.thingsStatistics
+        # res['user_state_update']['1'] = ''
+        # res['response']['buttons'] = get_suggests(user_id)
+        res = stopR(res, user0)
         res['response']['buttons'] = get_suggests(user_id)
         return
     if req['request']['original_utterance'].lower() in [
@@ -338,7 +356,7 @@ def get_suggests(user_id):
 
     suggests = [
         {'title': suggest, 'hide': True}
-        for suggest in (["Как пользоваться?"]+session['suggests'][:3] if "Как пользоваться?" in session['suggests'] else session['suggests'][:3])
+        for suggest in (["Как пользоваться?"]+popf(session['suggests'][:3], "Как пользоваться?") if "Как пользоваться?" in session['suggests'] else session['suggests'][:3])
     ]
     # Убираем первую подсказку, чтобы подсказки менялись каждый раз.
     sessionStorage[user_id] = session
