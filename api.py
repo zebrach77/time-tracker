@@ -270,9 +270,13 @@ def handle_dialog(req, res):
         res['user_state_update']['0'] = user0.thingsStatistics
         res['user_state_update']['1'] = user0.lastThingName
         return
-    user0.addThing(req['request']['original_utterance'].lower())
-    res['response']['text'] = "Готово! Дело под названием %s добавлено в список. Время пошло!" % (
-        req['request']['original_utterance'])
+    if req['request']['original_utterance'].lower() not in user0.thingsStatistics:
+        user0.addThing(req['request']['original_utterance'].lower())
+        res['response']['text'] = "Готово! Дело под названием %s добавлено в список. Время пошло!" % (
+            req['request']['original_utterance'])
+    else:
+        user0.addThing(req['request']['original_utterance'].lower())
+        res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % req['request']['original_utterance']
     res['response']['buttons'] = get_suggests(user_id)
     res['user_state_update']['0'] = user0.thingsStatistics
     res['user_state_update']['1'] = user0.lastThingName
@@ -295,9 +299,10 @@ def get_suggests(user_id):
     session = sessionStorage.get(user_id, defaultSuggests)
     # Выбираем 3 первые подсказки из массива.
     random.shuffle(session['suggests'])
+
     suggests = [
         {'title': suggest, 'hide': True}
-        for suggest in session['suggests'][:3]
+        for suggest in (["Как пользоваться?"]+session['suggests'][:3] if "Как пользоваться?" in session['suggests'] else session['suggests'][:3])
     ]
     # Убираем первую подсказку, чтобы подсказки менялись каждый раз.
     sessionStorage[user_id] = session
