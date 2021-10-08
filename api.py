@@ -240,7 +240,7 @@ def handle_dialog(req, res):
             return
         res['response']['text'] = "Статистика на сегодня: \n"
         for key, value in user0.thingsStatistics.items():
-            res['response']['text'] += str(key) + ' --- ' + str(value) + '\n'
+            res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(value) + '\n'
         res['user_state_update']['0'] = user0.thingsStatistics
         res['user_state_update']['1'] = ''
         res['response']['end_session'] = True
