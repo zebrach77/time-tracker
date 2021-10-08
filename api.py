@@ -189,7 +189,7 @@ def handle_dialog(req, res):
             user0.removeThing(key)
         res['user_state_update']['0'] = user0.thingsStatistics
         res['user_state_update']['1'] = user0.lastThingName
-        res['user_state_update']['2'] datetime.now(IST).isoformat()[:10]
+        res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
     # Обрабатываем ответ пользователя.
     if req['request']['original_utterance'].lower() in [
         "остановить",
