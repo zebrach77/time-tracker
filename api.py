@@ -25,7 +25,8 @@ client = pymongo.MongoClient(
 db = client['tt']
 myCollection = db.myCollection
 def popf(l, el):
-    l.remove(el)
+    if el in l:
+        l.remove(el)
     return l
 
 # for i in range(10):
