@@ -12,8 +12,6 @@ import pytz
 from flask import Flask, request
 import pymongo
 
-
-
 IST = pytz.timezone('Europe/Moscow')
 # cur = datetime.now(IST).isoformat()
 # print(cur[:10])
@@ -22,10 +20,12 @@ logging.basicConfig(level=logging.DEBUG)
 # Хранилище данных о сессиях.
 sessionStorage = {}
 client = pymongo.MongoClient(
-    "mongodb+srv://zebrach77-tt:jofFuz-rapsoc-qorzo3"+
+    "mongodb+srv://zebrach77-tt:jofFuz-rapsoc-qorzo3" +
     "@tt.3nzl5.mongodb.net/tt?retryWrites=true&w=majority")
 db = client['tt']
 myCollection = db.myCollection
+
+
 # for i in range(10):
 #     print('\n')
 # for d in myCollection.find():
@@ -118,7 +118,7 @@ class Computing:
     def timeStop(self):
         if self.thingsStatistics:
             self.timeB = time.time()
-            self.plusThingParameter(self.lastThingName, round(self.timeB-self.timeA))
+            self.plusThingParameter(self.lastThingName, round(self.timeB - self.timeA))
             self.timeReset()
 
     def timeReset(self):
@@ -151,7 +151,9 @@ def handle_dialog(req, res):
                 "Стоп",
             ]
         }
-        res['response']['text'] = 'Привет! Я - умный трекер времени. Скажите мне, чем хотели бы заняться сейчас, и я засеку время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу.'
+        res['response'][
+            'text'] = 'Привет! Я - умный трекер времени. Скажите мне, чем хотели бы заняться сейчас, и я засеку ' \
+                      'время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу. '
         res['response']['buttons'] = get_suggests(user_id)
         res['user_state_update'] = {}
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
@@ -160,7 +162,7 @@ def handle_dialog(req, res):
     else:
         sessionStorage[user_id] = {
             'suggests': [
-                "Как пользоваться?" if req['state']['user'].get('count', '0')=='0' else None,
+                "Как пользоваться?" if req['state']['user'].get('count', '0') == '0' else None,
                 "Уборка",
                 "Учёба",
                 "Работа",
@@ -175,11 +177,9 @@ def handle_dialog(req, res):
         res['user_state_update'] = {}
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
 
-
     user0.thingsStatistics = req['state']['user'].get('0', {})
     user0.lastThingName = req['state']['user'].get('1', '')
     user0.timeStop()
-
 
     if req['state']['user'].get('2', '') != datetime.now(IST).isoformat()[:10]:
         # cur = datetime.now(IST).isoformat()
@@ -204,7 +204,7 @@ def handle_dialog(req, res):
             return
         res['response']['text'] = "Готово. Статистика на сегодня: \n"
         for key, value in user0.thingsStatistics.items():
-            res['response']['text'] += str(key) + ' --- ' + str(value)+'\n'
+            res['response']['text'] += str(key) + ' --- ' + str(value) + '\n'
         res['user_state_update']['0'] = user0.thingsStatistics
         res['user_state_update']['1'] = ''
         res['response']['buttons'] = get_suggests(user_id)
@@ -222,7 +222,7 @@ def handle_dialog(req, res):
             return
         res['response']['text'] = "Статистика на сегодня: \n"
         for key, value in user0.thingsStatistics.items():
-            res['response']['text'] += str(key) + ' --- ' + str(value)+'\n'
+            res['response']['text'] += str(key) + ' --- ' + str(value) + '\n'
         res['user_state_update']['0'] = user0.thingsStatistics
         res['user_state_update']['1'] = ''
         res['response']['end_session'] = True
@@ -239,7 +239,7 @@ def handle_dialog(req, res):
             return
         res['response']['text'] = "Статистика на сегодня: \n"
         for key, value in user0.thingsStatistics.items():
-            res['response']['text'] += str(key) + ' --- ' + str(value)+'\n'
+            res['response']['text'] += str(key) + ' --- ' + str(value) + '\n'
         res['response']['buttons'] = get_suggests(user_id)
         res['user_state_update']['0'] = user0.thingsStatistics
         res['user_state_update']['1'] = user0.lastThingName
@@ -260,7 +260,7 @@ def handle_dialog(req, res):
         else:
             tt = ''
             for i in q[1:]:
-                tt += i+' '
+                tt += i + ' '
             user0.removeThing(tt[:-1])
         res['response']['text'] = "Готово"
         res['response']['buttons'] = get_suggests(user_id)
@@ -273,6 +273,8 @@ def handle_dialog(req, res):
     res['response']['buttons'] = get_suggests(user_id)
     res['user_state_update']['0'] = user0.thingsStatistics
     res['user_state_update']['1'] = user0.lastThingName
+
+
 # Функция возвращает две подсказки для ответа.
 
 
