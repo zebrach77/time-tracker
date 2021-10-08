@@ -132,15 +132,16 @@ user0 = Computing()
 def handle_dialog(req, res):
     global user0
     user_id = req['session']['user_id']
-    if req['session']['new']:
+    if req['state']['user'].get('new', 'yes') == 'yes':
         # Это новый пользователь.
         # Инициализируем сессию и поприветствуем его.
         user0 = Computing()
         res['user_state_update'] = req['state']['user']
-        user0.thingsStatistics = req['state']['user'].get('0', {})
-        user0.lastThingName = req['state']['user'].get('1', '')
+        # user0.thingsStatistics = req['state']['user'].get('0', {})
+        # user0.lastThingName = req['state']['user'].get('1', '')
         sessionStorage[user_id] = {
             'suggests': [
+                "Как пользоваться?",
                 "Уборка",
                 "Учёба",
                 "Работа",
@@ -153,10 +154,30 @@ def handle_dialog(req, res):
         res['response']['text'] = 'Привет! Я - умный трекер времени. Скажите мне, чем хотели бы заняться сейчас, и я засеку время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу.'
         res['response']['buttons'] = get_suggests(user_id)
         res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
+        res['user_state_update']['new'] = 'no'
         return
+    else:
+        sessionStorage[user_id] = {
+            'suggests': [
+                "Как пользоваться?" if req['state']['user'].get('count', '0')=='0' else None,
+                "Уборка",
+                "Учёба",
+                "Работа",
+                "Отдых",
+                "Закончить",
+                "Статистика",
+                "Стоп",
+            ]
+        }
+        res['response']['text'] = 'Привет! А я вас помню! Чем займёмся сегодня?'
+        res['response']['buttons'] = get_suggests(user_id)
+        res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
+
+
     user0.thingsStatistics = req['state']['user'].get('0', {})
     user0.lastThingName = req['state']['user'].get('1', '')
     user0.timeStop()
+    res['user_state_update']['count'] = str(int(req['state']['user'].get('count', '0'))+1)
     if req['state']['user'].get('2', '') != datetime.now(IST).isoformat()[:10]:
         # cur = datetime.now(IST).isoformat()
         print("It's next day")
