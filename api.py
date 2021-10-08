@@ -8,6 +8,7 @@ import time
 import random
 from datetime import datetime
 import pytz
+import sec as sec
 
 from flask import Flask, request
 import pymongo
@@ -124,6 +125,27 @@ class Computing:
 
     def timeReset(self):
         self.timeA = time.time()
+    def h(self, dig):
+        if dig == 1:
+            return "час"
+        if (dig == 0) or (dig>=5):
+            return "часов"
+        if (dig==2) or (dig==3) or (dig == 4):
+            return "часа"
+    def m(self, dig):
+        if dig == 1:
+            return "минута"
+        if (dig == 0) or (dig>=5):
+            return "минут"
+        if (dig==2) or (dig==3) or (dig == 4):
+            return "минуты"
+    def s(self, dig):
+        if dig == 1:
+            return "секунда"
+        if (dig == 0) or (dig>=5):
+            return "секунд"
+        if (dig==2) or (dig==3) or (dig == 4):
+            return "секунды"
     def secsToTime(self, thingName):
         secs_all = self.thingsStatistics.get(thingName.lower(), 0)
         tm = ''
@@ -131,11 +153,11 @@ class Computing:
         mins = secs_all // 60
         hours = secs_all // 3600
         if hours:
-            tm += "%s часов, " % hours
+            tm += "%s %s, " % hours % self.h(hours%10)
         if mins:
-            tm += "%s минут, " % mins
+            tm += "%s %s, " % mins % self.m(mins%10)
         if secs:
-            tm += "%s секунд" % secs
+            tm += "%s %s" % secs % self.s(secs%10)
         return tm
 
 
