@@ -13,8 +13,6 @@ from flask import Flask, request
 import pymongo
 
 IST = pytz.timezone('Europe/Moscow')
-# cur = datetime.now(IST).isoformat()
-# print(cur[:10])
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 # Хранилище данных о сессиях.
@@ -280,7 +278,8 @@ class Processing:
 				self.req['request']['original_utterance'])
 		else:
 			self.user.addThing(self.req['request']['original_utterance'].lower())
-			self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % self.req['request']['original_utterance']
+			self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % \
+			                               self.req['request']['original_utterance']
 		# self.user.timeStop()
 		self.dup1()
 		return
@@ -336,7 +335,6 @@ def main():
 			"end_session": False
 		}
 	}
-
 
 	dialog0 = Processing(request.json, response)
 	response = dialog0.res
