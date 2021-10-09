@@ -1,6 +1,6 @@
 # coding: utf-8
 # Импортирует поддержку UTF-8.
-# from __future__ import unicode_literals
+from __future__ import unicode_literals
 
 import json
 import logging
@@ -349,6 +349,5 @@ def main():
 
 
 '''
-WTF???
-Why aren't you working???
+PLEASE WORK!!!
 '''
