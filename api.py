@@ -24,10 +24,13 @@ client = pymongo.MongoClient(
 	"@tt.3nzl5.mongodb.net/tt?retryWrites=true&w=majority")
 db = client['tt']
 myCollection = db.myCollection
+
+
 def popf(l, el):
 	if el in l:
 		l.remove(el)
 	return l
+
 
 class Computing:
 	def __init__(self):
@@ -97,9 +100,6 @@ class Computing:
 		self.timeA = time.time()
 
 
-
-
-
 class Processing:
 	def __init__(self, reqT, resT):
 		self.res = resT
@@ -152,14 +152,11 @@ class Processing:
 			tm += "%d %s" % (secs, self.s(secs % 10))
 		return tm
 
-
-
-
 	def initUser(self):
 		self.res['user_state_update'] = self.req['state']['user']
 		self.res['response']['buttons'] = self.get_suggests(self.user_id)
 		self.res['user_state_update'] = {}
-		self. res['user_state_update']['1'] = ''
+		self.res['user_state_update']['1'] = ''
 		self.res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
 		self.res['user_state_update']['new'] = 'no'
 		return
@@ -199,10 +196,10 @@ class Processing:
 		              'время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу. '
 		self.initUser()
 
-
 	def stopR(self, b):
 		if not self.user.thingsStatistics:
-			self.res['response']['text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали." if b else "Вы сегодня ничего не делали."
+			self.res['response'][
+				'text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали." if b else "Вы сегодня ничего не делали."
 		else:
 			self.res['response']['text'] = "Готово."
 		self.stats()
@@ -248,7 +245,7 @@ class Processing:
 			self.res['user_state_update']['0'] = {}
 			self.res['user_state_update']['1'] = ''
 			return
-		self.res['response']['text'] = self.res['response'].get('text', '')+"Статистика на сегодня: \n"
+		self.res['response']['text'] = self.res['response'].get('text', '') + "Статистика на сегодня: \n"
 		for key, value in self.user.thingsStatistics.items():
 			self.res['response']['text'] += str(key) + ' --- ' + self.secsToTime(value) + '\n'
 
@@ -284,11 +281,11 @@ class Processing:
 				self.req['request']['original_utterance'])
 		else:
 			self.user.addThing(self.req['request']['original_utterance'].lower())
-			self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % self.req['request'][
-				'original_utterance']
+			self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % \
+			                               self.req['request'][
+				                               'original_utterance']
 		self.dup1()
 		return
-
 
 	def mainF(self):
 		if self.req['state']['user'].get('new', 'yes') == 'yes':
@@ -326,8 +323,7 @@ class Processing:
 		return
 
 
-
-
+dialog0 = Processing({}, {})
 
 
 @app.route("/", methods=['POST'])
