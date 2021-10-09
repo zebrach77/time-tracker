@@ -336,6 +336,8 @@ def main():
 			"end_session": False
 		}
 	}
+
+
 	dialog0 = Processing(request.json, response)
 	response = dialog0.res
 	logging.info('Response: %r', response)
