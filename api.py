@@ -192,7 +192,6 @@ class Processing:
         self.sessionStorage[self.user_id] = {
             'suggests': [
                 "Как пользоваться?" if self.req['state']['user'].get('count', '0') == '0' else None,
-                # TODO: Write documentation on russian
                 "Уборка",
                 "Учёба",
                 "Работа",
