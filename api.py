@@ -107,12 +107,12 @@ class Processing:
 		self.user = Computing()
 		self.sessionStorage = {}
 		self.res['user_state_update'] = {}
-		if self.req:
-			self.user_id = self.req['session']['user_id']
-			self.user.thingsStatistics = self.req['state']['user'].get('0', {})
-			self.user.lastThingName = self.req['state']['user'].get('1', '')
-			self.ans = self.req['request']['original_utterance'].lower().split()
-			self.mainF()
+		# if self.req:
+		self.user_id = self.req['session']['user_id']
+		self.user.thingsStatistics = self.req['state']['user'].get('0', {})
+		self.user.lastThingName = self.req['state']['user'].get('1', '')
+		self.ans = self.req['request']['original_utterance'].lower().split()
+		self.mainF()
 
 	def h(self, dig):
 		if dig == 1:
@@ -250,7 +250,6 @@ class Processing:
 			self.res['response']['text'] += str(key) + ' --- ' + self.secsToTime(value) + '\n'
 
 	def dup1(self):
-
 		self.res['response']['buttons'] = self.get_suggests(self.user_id)
 		self.res['user_state_update']['0'] = self.user.thingsStatistics
 		self.res['user_state_update']['1'] = self.user.lastThingName
@@ -281,9 +280,7 @@ class Processing:
 				self.req['request']['original_utterance'])
 		else:
 			self.user.addThing(self.req['request']['original_utterance'].lower())
-			self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % \
-			                               self.req['request'][
-				                               'original_utterance']
+			self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % self.req['request']['original_utterance']
 		self.user.timeStop()
 		self.dup1()
 		return
