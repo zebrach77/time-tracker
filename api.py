@@ -291,7 +291,7 @@ class Processing:
 		if self.req['state']['user'].get('new', 'yes') == 'yes':
 			self.newUser()
 			return
-		if self.req['session']['new']:
+		elif self.req['session']['new']:
 			self.contUser()
 			return
 		self.user.timeStop()
