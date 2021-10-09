@@ -346,6 +346,7 @@ def main():
 		dialog0 = Processing(request.json, response)
 	else:
 		dialog0.mainF()
+	response = dialog0.res
 	logging.info('Response: %r', response)
 	return json.dumps(
 		response,
