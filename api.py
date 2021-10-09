@@ -320,12 +320,10 @@ class Processing:
 		return
 
 
-dialog0 = Processing({}, {})
 
 
 @app.route("/", methods=['POST'])
 def main():
-	global dialog0
 	# Функция получает тело запроса и возвращает ответ.
 	logging.info('Request: %r', request.json)
 	response = {
