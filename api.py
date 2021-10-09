@@ -342,10 +342,10 @@ def main():
 			"end_session": False
 		}
 	}
-	if not dialog0 in locals():
-		dialog0 = Processing(request.json, response)
-	else:
+	try:
 		dialog0.mainF()
+	except NameError:
+		dialog0 = Processing(request.json, response)
 	response = dialog0.res
 	logging.info('Response: %r', response)
 	return json.dumps(
