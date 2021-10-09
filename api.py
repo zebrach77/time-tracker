@@ -338,12 +338,7 @@ def main():
 			"end_session": False
 		}
 	}
-	if not dialog0.req:
-		dialog0 = Processing(request.json, response)
-	else:
-		dialog0.req = request.json
-		dialog0.res = response
-	dialog0.mainF()
+	dialog0 = Processing(request.json, response)
 	response = dialog0.res
 	logging.info('Response: %r', response)
 	return json.dumps(
