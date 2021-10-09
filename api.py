@@ -272,7 +272,7 @@ class Processing:
             self.res['user_state_update']['0'] = {}
             self.res['user_state_update']['1'] = ''
             return
-        self.res['response']['text'] = self.res['response']['text']+"Статистика на сегодня: \n" if self.res['response']['text'] else "Статистика на сегодня: \n"
+        self.res['response']['text'] = self.res['response'].get('text', '')+"Статистика на сегодня: \n"
         for key, value in self.user.thingsStatistics.items():
             self.res['response']['text'] += str(key) + ' --- ' + self.user.secsToTime(key) + '\n'
 
