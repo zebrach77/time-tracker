@@ -18,7 +18,7 @@ IST = pytz.timezone('Europe/Moscow')
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 # Хранилище данных о сессиях.
-sessionStorage = {}
+
 client = pymongo.MongoClient(
     "mongodb+srv://zebrach77-tt:jofFuz-rapsoc-qorzo3" +
     "@tt.3nzl5.mongodb.net/tt?retryWrites=true&w=majority")
@@ -52,7 +52,9 @@ def main():
             "end_session": False
         }
     }
-    handle_dialog(request.json, response)
+
+    dialog = Processing(request.json, response)
+    dialog.mainF()
     logging.info('Response: %r', response)
     return json.dumps(
         response,
@@ -165,34 +167,47 @@ class Computing:
 
 
 # Функция для непосредственной обработки диалога.
-user0 = Computing()
 
+class Processing:
+    def __init__(self, reqT, resT):
+        self.res = resT
+        self.req = reqT
+        self.user = Computing()
+        self.user_id = self.req['session']['user_id']
+        self.sessionStorage = {}
+        self.res['user_state_update'] = {}
+        self.user.thingsStatistics = self.req['state']['user'].get('0', {})
+        self.user.lastThingName = self.req['state']['user'].get('1', '')
+        self.ans = self.req['request']['original_utterance'].lower().split()
+    def initUser(self):
+        self.res['user_state_update'] = self.req['state']['user']
+        self.res['response']['buttons'] = self.get_suggests(self.user_id)
+        self.res['user_state_update'] = {}
+        self. res['user_state_update']['1'] = ''
+        self.res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
+        self.res['user_state_update']['new'] = 'no'
+        return
 
-def stopR(res, user0):
-    if not user0.thingsStatistics:
-        res['response']['text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали."
-        res['user_state_update']['0'] = user0.thingsStatistics
-        res['user_state_update']['1'] = ''
-        return res
-    res['response']['text'] = "Готово. Статистика на сегодня: \n"
-    for key, value in user0.thingsStatistics.items():
-        res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(key) + '\n'
-    res['user_state_update']['0'] = user0.thingsStatistics
-    res['user_state_update']['1'] = ''
-    return res
+    def contUser(self):
+        self.sessionStorage[self.user_id] = {
+            'suggests': [
+                "Как пользоваться?" if self.req['state']['user'].get('count', '0') == '0' else None,
+                # TODO: Write documentation on russian
+                "Уборка",
+                "Учёба",
+                "Работа",
+                "Отдых",
+                "Закончить",
+                "Статистика",
+                "Стоп",
+            ]
+        }
+        self.res['response']['text'] = 'Привет! А я вас помню! Чем займёмся сегодня?'
+        self.initUser()
+        return
 
-
-def handle_dialog(req, res):
-    global user0
-    user_id = req['session']['user_id']
-    if req['state']['user'].get('new', 'yes') == 'yes':
-        # Это новый пользователь.
-        # Инициализируем сессию и поприветствуем его.
-        user0 = Computing()
-        res['user_state_update'] = req['state']['user']
-        # user0.thingsStatistics = req['state']['user'].get('0', {})
-        # user0.lastThingName = req['state']['user'].get('1', '')
-        sessionStorage[user_id] = {
+    def newUser(self):
+        self.sessionStorage[self.user_id] = {
             'suggests': [
                 "Как пользоваться?",
                 "Уборка",
@@ -204,161 +219,133 @@ def handle_dialog(req, res):
                 "Стоп",
             ]
         }
-        res['response'][
+        self.res['response'][
             'text'] = 'Привет! Я - умный трекер времени. Скажите мне, чем хотели бы заняться сейчас, и я засеку ' \
                       'время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу. '
-        res['response']['buttons'] = get_suggests(user_id)
-        res['user_state_update'] = {}
-        res['user_state_update']['1'] = ''
-        res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
-        res['user_state_update']['new'] = 'no'
+        self.initUser()
+
+
+    def stopR(self, b):
+        if not self.user.thingsStatistics:
+            self.res['response']['text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали." if b else "Вы сегодня ничего не делали."
+        else:
+            self.res['response']['text'] = "Готово."
+        self.stats()
+        self.res['user_state_update']['0'] = self.user.thingsStatistics
+        self.res['user_state_update']['1'] = ''
+        self.res['response']['buttons'] = self.get_suggests(self.user_id)
         return
-    elif req['session']['new']:
-        sessionStorage[user_id] = {
+
+    def get_suggests(self, user_id):
+        defaultSuggests = {
             'suggests': [
-                "Как пользоваться?" if req['state']['user'].get('count', '0') == '0' else None, #TODO: Write documentation on russian
                 "Уборка",
                 "Учёба",
                 "Работа",
                 "Отдых",
                 "Закончить",
                 "Статистика",
-                "Стоп",
             ]
         }
-        res['response']['text'] = 'Привет! А я вас помню! Чем займёмся сегодня?'
-        res['response']['buttons'] = get_suggests(user_id)
-        res['user_state_update'] = {}
-        res['user_state_update']['1'] = ''
-        res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
-        return
-    res['user_state_update'] = {}
-    user0.thingsStatistics = req['state']['user'].get('0', {})
-    user0.lastThingName = req['state']['user'].get('1', '')
-    user0.timeStop()
-
-    if req['state']['user'].get('2', '') != datetime.now(IST).isoformat()[:10]:
-        # cur = datetime.now(IST).isoformat()
-        print("It's next day")
-        tr = list(user0.thingsStatistics.keys())
-        for key in tr.copy():
-            user0.removeThing(key)
-        res['user_state_update']['0'] = user0.thingsStatistics
-        res['user_state_update']['1'] = user0.lastThingName
-        res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
-    # Обрабатываем ответ пользователя.
-    if req['request']['original_utterance'].lower() in [
-        "остановить",
-        "стоп",
-        "останови",
-    ]:
-        # if not user0.thingsStatistics:
-        #     res['response']['text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали."
-        #     res['user_state_update']['0'] = user0.thingsStatistics
-        #     res['user_state_update']['1'] = ''
-        #     res['response']['buttons'] = get_suggests(user_id)
-        #     return
-        # res['response']['text'] = "Готово. Статистика на сегодня: \n"
-        # for key, value in user0.thingsStatistics.items():
-        #     res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(key) + '\n'
-        # res['user_state_update']['0'] = user0.thingsStatistics
-        # res['user_state_update']['1'] = ''
-        # res['response']['buttons'] = get_suggests(user_id)
-        res = stopR(res, user0)
-        res['response']['buttons'] = get_suggests(user_id)
-        return
-    if req['request']['original_utterance'].lower() in [
-        "хватит",
-        "закончить",
-    ]:
-        # прощаемся.
-        if not user0.thingsStatistics:
-            res['response']['text'] = "Вы сегодня ничего не делали."
-            res['user_state_update']['0'] = user0.thingsStatistics
-            res['user_state_update']['1'] = ''
-            res['response']['end_session'] = True
-            return
-        res['response']['text'] = "Статистика на сегодня: \n"
-        for key, value in user0.thingsStatistics.items():
-            res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(key) + '\n'
-        res['user_state_update']['0'] = user0.thingsStatistics
-        res['user_state_update']['1'] = ''
-        res['response']['end_session'] = True
-        return
-    if req['request']['original_utterance'].lower() in [
-        "статистика",
-        "прочитай статистику",
-    ]:
-        if not user0.thingsStatistics:
-            res['response']['text'] = "Вы сегодня ничего ещё не делали."
-            res['response']['buttons'] = get_suggests(user_id)
-            res['user_state_update']['0'] = user0.thingsStatistics
-            res['user_state_update']['1'] = user0.lastThingName
-            return
-        res['response']['text'] = "Статистика на сегодня: \n"
-        for key, value in user0.thingsStatistics.items():
-            res['response']['text'] += str(key) + ' --- ' + user0.secsToTime(key) + '\n'
-        res['response']['buttons'] = get_suggests(user_id)
-        res['user_state_update']['0'] = user0.thingsStatistics
-        res['user_state_update']['1'] = user0.lastThingName
-        return
-    q = req['request']['original_utterance'].lower().split()
-    if "замени" in q:
-        user0.changeThing(q[1], q[3])
-        res['response']['text'] = "Готово"
-        res['response']['buttons'] = get_suggests(user_id)
-        res['user_state_update']['0'] = user0.thingsStatistics
-        res['user_state_update']['1'] = user0.lastThingName
-        return
-    if ("удали" in q) or ("удалить" in q):
-        if (q[1] == "всё") or (q[1] == "все"):
-            tr = list(user0.thingsStatistics.keys())
-            for key in tr.copy():
-                user0.removeThing(key)
-        else:
-            tt = ''
-            for i in q[1:]:
-                tt += i + ' '
-            user0.removeThing(tt[:-1])
-        res['response']['text'] = "Готово"
-        res['response']['buttons'] = get_suggests(user_id)
-        res['user_state_update']['0'] = user0.thingsStatistics
-        res['user_state_update']['1'] = user0.lastThingName
-        return
-    if req['request']['original_utterance'].lower() not in user0.thingsStatistics:
-        user0.addThing(req['request']['original_utterance'].lower())
-        res['response']['text'] = "Готово! Дело под названием %s добавлено в список. Время пошло!" % (
-            req['request']['original_utterance'])
-    else:
-        user0.addThing(req['request']['original_utterance'].lower())
-        res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % req['request']['original_utterance']
-    res['response']['buttons'] = get_suggests(user_id)
-    res['user_state_update']['0'] = user0.thingsStatistics
-    res['user_state_update']['1'] = user0.lastThingName
-
-
-# Функция возвращает две подсказки для ответа.
-
-
-def get_suggests(user_id):
-    defaultSuggests = {
-        'suggests': [
-            "Уборка",
-            "Учёба",
-            "Работа",
-            "Отдых",
-            "Закончить",
-            "Статистика",
+        session = self.sessionStorage.get(user_id, defaultSuggests)
+        random.shuffle(session['suggests'])
+        suggests = [
+            {'title': suggest, 'hide': True}
+            for suggest in (
+                ["Как пользоваться?"] + popf(session['suggests'][:3], "Как пользоваться?") if "Как пользоваться?" in
+                                                                                              session['suggests'] else
+                session['suggests'][:3])
         ]
-    }
-    session = sessionStorage.get(user_id, defaultSuggests)
-    # Выбираем 3 первые подсказки из массива.
-    random.shuffle(session['suggests'])
+        self.sessionStorage[user_id] = session
+        return suggests
 
-    suggests = [
-        {'title': suggest, 'hide': True}
-        for suggest in (["Как пользоваться?"]+popf(session['suggests'][:3], "Как пользоваться?") if "Как пользоваться?" in session['suggests'] else session['suggests'][:3])
-    ]
-    # Убираем первую подсказку, чтобы подсказки менялись каждый раз.
-    sessionStorage[user_id] = session
-    return suggests
+    def nextDay(self):
+        print("It's next day")
+        tr = list(self.user.thingsStatistics.keys())
+        for key in tr.copy():
+            self.user.removeThing(key)
+        self.res['user_state_update']['0'] = self.user.thingsStatistics
+        self.res['user_state_update']['1'] = ''
+        self.res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
+
+    def stats(self):
+        if not self.user.thingsStatistics:
+            self.res['user_state_update']['0'] = {}
+            self.res['user_state_update']['1'] = ''
+            return
+        self.res['response']['text'] = self.res['response']['text']+"Статистика на сегодня: \n" if self.res['response']['text'] else "Статистика на сегодня: \n"
+        for key, value in self.user.thingsStatistics.items():
+            self.res['response']['text'] += str(key) + ' --- ' + self.user.secsToTime(key) + '\n'
+
+    def dup1(self):
+
+        self.res['response']['buttons'] = self.get_suggests(self.user_id)
+        self.res['user_state_update']['0'] = self.user.thingsStatistics
+        self.res['user_state_update']['1'] = self.user.lastThingName
+        return
+
+    def variants(self):
+        if "замени" in self.ans:
+            self.user.changeThing(self.ans[1], self.ans[3])
+            self.res['response']['text'] = "Готово"
+            self.dup1()
+            return
+        if ("удали" in self.ans) or ("удалить" in self.ans):
+            if (self.ans.get(1, '') == "всё") or (self.ans.get(1, '') == "все"):
+                tr = list(self.user.thingsStatistics.keys())
+                for key in tr.copy():
+                    self.user.removeThing(key)
+            else:
+                tt = ''
+                for i in self.ans[1:]:
+                    tt += i + ' '
+                self.user.removeThing(tt[:-1])
+            self.res['response']['text'] = "Готово"
+            self.dup1()
+            return
+        if self.req['request']['original_utterance'].lower() not in self.user.thingsStatistics:
+            self.user.addThing(self.req['request']['original_utterance'].lower())
+            self.res['response']['text'] = "Готово! Дело под названием %s добавлено в список. Время пошло!" % (
+                self.req['request']['original_utterance'])
+        else:
+            self.user.addThing(self.req['request']['original_utterance'].lower())
+            self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % self.req['request'][
+                'original_utterance']
+        self.dup1()
+        return
+
+
+    def mainF(self):
+        if self.req['state']['user'].get('new', 'yes') == 'yes':
+            self.newUser()
+            return
+        if self.req['session']['new']:
+            self.contUser()
+            return
+        self.user.timeStop()
+        if self.req['state']['user'].get('2', '') != datetime.now(IST).isoformat()[:10]:
+            self.nextDay()
+        if self.req['request']['original_utterance'].lower() in [
+            "остановить",
+            "стоп",
+            "останови",
+        ]:
+            self.stopR(True)
+            return
+        if self.req['request']['original_utterance'].lower() in [
+            "хватит",
+            "закончить",
+        ]:
+            self.stopR(False)
+            self.res['response']['end_session'] = True
+            return
+        if self.req['request']['original_utterance'].lower() in [
+            "статистика",
+            "прочитай статистику",
+        ]:
+            if not self.user.thingsStatistics:
+                self.res['response']['text'] = "Вы сегодня ничего не делали."
+            self.stats()
+            return
+        self.variants()
+        return
