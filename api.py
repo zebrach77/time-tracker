@@ -340,6 +340,8 @@ def main():
 	}
 	if not dialog0.req:
 		dialog0 = Processing(request.json, response)
+	else:
+		dialog0.req = request.json
 	dialog0.mainF()
 	response = dialog0.res
 	logging.info('Response: %r', response)
