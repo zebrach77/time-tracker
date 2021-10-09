@@ -284,6 +284,7 @@ class Processing:
 			self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % \
 			                               self.req['request'][
 				                               'original_utterance']
+		self.user.timeStop()
 		self.dup1()
 		return
 
