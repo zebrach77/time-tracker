@@ -290,7 +290,7 @@ class Processing:
             self.dup1()
             return
         if ("удали" in self.ans) or ("удалить" in self.ans):
-            if (self.ans.get(1, '') == "всё") or (self.ans.get(1, '') == "все"):
+            if (self.ans[1] == "всё") or (self.ans[1] == "все"):
                 tr = list(self.user.thingsStatistics.keys())
                 for key in tr.copy():
                     self.user.removeThing(key)
