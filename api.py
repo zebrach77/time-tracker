@@ -29,41 +29,6 @@ def popf(l, el):
         l.remove(el)
     return l
 
-# for i in range(10):
-#     print('\n')
-# for d in myCollection.find():
-#     pprint(d)
-# myCollection.find_one_and_replace({'user':'tow'},{'user':'tow'})
-# for d in myCollection.find():
-#     pprint(d)
-# for i in range(10):
-#     print('\n')
-# Задаем параметры приложения Flask.
-
-dialog0 = False
-@app.route("/", methods=['POST'])
-def main():
-    global dialog0
-    # Функция получает тело запроса и возвращает ответ.
-    logging.info('Request: %r', request.json)
-    response = {
-        "version": request.json['version'],
-        "session": request.json['session'],
-        "response": {
-            "end_session": False
-        }
-    }
-    if not dialog0:
-        dialog0 = Processing(request.json, response)
-    dialog0.mainF()
-    logging.info('Response: %r', response)
-    return json.dumps(
-        response,
-        ensure_ascii=False,
-        indent=2
-    )
-
-
 class Computing:
     def __init__(self):
         self.thingsStatistics = {}
@@ -134,19 +99,20 @@ class Computing:
 
 
 
-# Функция для непосредственной обработки диалога.
 
 class Processing:
     def __init__(self, reqT, resT):
         self.res = resT
         self.req = reqT
         self.user = Computing()
-        self.user_id = self.req['session']['user_id']
         self.sessionStorage = {}
         self.res['user_state_update'] = {}
-        self.user.thingsStatistics = self.req['state']['user'].get('0', {})
-        self.user.lastThingName = self.req['state']['user'].get('1', '')
-        self.ans = self.req['request']['original_utterance'].lower().split()
+        if self.req:
+            self.user_id = self.req['session']['user_id']
+            self.user.thingsStatistics = self.req['state']['user'].get('0', {})
+            self.user.lastThingName = self.req['state']['user'].get('1', '')
+            self.ans = self.req['request']['original_utterance'].lower().split()
+            self.mainF()
 
     def h(self, dig):
         if dig == 1:
@@ -358,3 +324,30 @@ class Processing:
             return
         self.variants()
         return
+
+
+
+
+
+
+dialog0 = Processing({},{})
+@app.route("/", methods=['POST'])
+def main():
+    global dialog0
+    # Функция получает тело запроса и возвращает ответ.
+    logging.info('Request: %r', request.json)
+    response = {
+        "version": request.json['version'],
+        "session": request.json['session'],
+        "response": {
+            "end_session": False
+        }
+    }
+    if not dialog0:
+        dialog0 = Processing(request.json, response)
+    logging.info('Response: %r', response)
+    return json.dumps(
+        response,
+        ensure_ascii=False,
+        indent=2
+    )
