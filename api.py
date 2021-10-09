@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 import json
 import logging
-import time
 import random
 from datetime import datetime
 import pytz
@@ -33,12 +32,12 @@ def popf(l, el):
 class Computing:
 	def __init__(self):
 		self.thingsStatistics = {}
-		self.timeA = time.time()
-		self.timeB = time.time()
+		self.timeA = datetime.now()
+		self.timeB = datetime.now()
 		self.lastThingName = ''
 
 	def addThing(self, thingName):
-		self.timeReset()
+		# self.timeReset()
 		self.lastThingName = thingName
 		if not thingName.lower() in self.thingsStatistics.keys():
 			self.thingsStatistics[thingName.lower()] = 0
@@ -89,22 +88,24 @@ class Computing:
 			return False
 
 	def timeStop(self):
+
 		if self.thingsStatistics:
-			self.timeB = time.time()
-			self.plusThingParameter(self.lastThingName, round(self.timeB - self.timeA))
-			self.timeReset()
+			self.timeB = datetime.now()
+			logging.warning([self.timeB - self.timeA])
+			self.plusThingParameter(self.lastThingName, (self.timeB - self.timeA).seconds)
+		self.timeReset()
 
 	def timeReset(self):
-		self.timeA = time.time()
+		self.timeA = datetime.now()
 
 
 class Processing:
-	def __init__(self, reqT, resT):
+	def __init__(self, reqT, resT, comp):
 		self.res = resT
 		self.req = reqT
-		self.user = Computing()
 		self.sessionStorage = {}
 		self.res['user_state_update'] = {}
+		self.user = comp
 		# if self.req:
 		self.user_id = self.req['session']['user_id']
 		self.user.thingsStatistics = self.req['state']['user'].get('0', {})
@@ -137,11 +138,10 @@ class Processing:
 			return "секунды"
 
 	def secsToTime(self, val):
-		secs_all = val
 		tm = ''
-		secs = secs_all % 60
-		mins = secs_all // 60
-		hours = secs_all // 3600
+		secs = val % 60
+		mins = val // 60
+		hours = val // 3600
 		if hours:
 			tm += "%d %s, " % (hours, self.h(hours % 10))
 		if mins:
@@ -149,15 +149,6 @@ class Processing:
 		if secs:
 			tm += "%d %s" % (secs, self.s(secs % 10))
 		return tm
-
-	def initUser(self):
-		self.res['user_state_update'] = self.req['state']['user']
-		self.res['response']['buttons'] = self.get_suggests(self.user_id)
-		self.res['user_state_update'] = {}
-		self.res['user_state_update']['1'] = ''
-		self.res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
-		self.res['user_state_update']['new'] = 'no'
-		return
 
 	def contUser(self):
 		self.sessionStorage[self.user_id] = {
@@ -173,7 +164,7 @@ class Processing:
 			]
 		}
 		self.res['response']['text'] = 'Привет! А я вас помню! Чем займёмся сегодня?'
-		self.initUser()
+		self.dup1()
 		return
 
 	def newUser(self):
@@ -191,15 +182,20 @@ class Processing:
 		}
 		self.res['response'][
 			'text'] = 'Привет! Я - умный трекер времени. Скажите мне, чем хотели бы заняться сейчас, и я засеку ' \
-		              'время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу. '
-		self.initUser()
+		              'время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу. ' \
+		              'Для настройки скажите кодовое слово Настройка. Для инструкции по использованию навыка скажите ' \
+		              'Как пользоваться?'
+		# TODO: Make documentation inside the bot
+		# TODO: Make settings
+
+		self.dup1()
 
 	def stopR(self, b):
 		if not self.user.thingsStatistics:
 			self.res['response'][
 				'text'] = "Останавливать нечего. Вы сегодня ничего ещё не делали." if b else "Вы сегодня ничего не делали."
 		else:
-			self.res['response']['text'] = "Готово."
+			self.res['response']['text'] = "Готово. "
 		self.stats()
 		self.res['user_state_update']['0'] = self.user.thingsStatistics
 		self.res['user_state_update']['1'] = ''
@@ -234,11 +230,12 @@ class Processing:
 		tr = list(self.user.thingsStatistics.keys())
 		for key in tr.copy():
 			self.user.removeThing(key)
-		self.res['user_state_update']['0'] = self.user.thingsStatistics
+		self.res['user_state_update']['0'] = {}
 		self.res['user_state_update']['1'] = ''
 		self.res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
 
 	def stats(self):
+
 		if not self.user.thingsStatistics:
 			self.res['user_state_update']['0'] = {}
 			self.res['user_state_update']['1'] = ''
@@ -246,11 +243,14 @@ class Processing:
 		self.res['response']['text'] = self.res['response'].get('text', '') + "Статистика на сегодня: \n"
 		for key, value in self.user.thingsStatistics.items():
 			self.res['response']['text'] += str(key) + ' --- ' + self.secsToTime(value) + '\n'
+		self.dup1()
 
 	def dup1(self):
 		self.res['response']['buttons'] = self.get_suggests(self.user_id)
 		self.res['user_state_update']['0'] = self.user.thingsStatistics
 		self.res['user_state_update']['1'] = self.user.lastThingName
+		self.res['user_state_update']['new'] = 'no'
+		self.res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
 		return
 
 	def variants(self):
@@ -280,7 +280,6 @@ class Processing:
 			self.user.addThing(self.req['request']['original_utterance'].lower())
 			self.res['response']['text'] = "Хорошо! Продолжаю считать время дела под названием %s" % \
 			                               self.req['request']['original_utterance']
-		# self.user.timeStop()
 		self.dup1()
 		return
 
@@ -314,16 +313,19 @@ class Processing:
 		]:
 			if not self.user.thingsStatistics:
 				self.res['response']['text'] = "Вы сегодня ничего не делали."
-			self.stats()
+			else:
+				self.stats()
 			return
 		self.variants()
 		return
 
 
+comp = Computing()
 
 
 @app.route("/", methods=['POST'])
 def main():
+	global comp
 	# Функция получает тело запроса и возвращает ответ.
 	logging.info('Request: %r', request.json)
 	response = {
@@ -334,8 +336,9 @@ def main():
 		}
 	}
 
-	dialog0 = Processing(request.json, response)
+	dialog0 = Processing(request.json, response, comp)
 	response = dialog0.res
+	comp = dialog0.user
 	logging.info('Response: %r', response)
 	return json.dumps(
 		response,
