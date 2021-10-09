@@ -40,9 +40,10 @@ def popf(l, el):
 #     print('\n')
 # Задаем параметры приложения Flask.
 
-
+dialog0 = False
 @app.route("/", methods=['POST'])
 def main():
+    global dialog0
     # Функция получает тело запроса и возвращает ответ.
     logging.info('Request: %r', request.json)
     response = {
@@ -52,9 +53,9 @@ def main():
             "end_session": False
         }
     }
-
-    dialog = Processing(request.json, response)
-    dialog.mainF()
+    if not dialog0:
+        dialog0 = Processing(request.json, response)
+    dialog0.mainF()
     logging.info('Response: %r', response)
     return json.dumps(
         response,
@@ -129,40 +130,7 @@ class Computing:
 
     def timeReset(self):
         self.timeA = time.time()
-    def h(self, dig):
-        if dig == 1:
-            return "час"
-        if (dig == 0) or (dig>=5):
-            return "часов"
-        if (dig==2) or (dig==3) or (dig == 4):
-            return "часа"
-    def m(self, dig):
-        if dig == 1:
-            return "минута"
-        if (dig == 0) or (dig>=5):
-            return "минут"
-        if (dig==2) or (dig==3) or (dig == 4):
-            return "минуты"
-    def s(self, dig):
-        if dig == 1:
-            return "секунда"
-        if (dig == 0) or (dig>=5):
-            return "секунд"
-        if (dig==2) or (dig==3) or (dig == 4):
-            return "секунды"
-    def secsToTime(self, thingName):
-        secs_all = self.thingsStatistics.get(thingName.lower(), 0)
-        tm = ''
-        secs = secs_all % 60
-        mins = secs_all // 60
-        hours = secs_all // 3600
-        if hours:
-            tm += "%d %s, " % (hours, self.h(hours%10))
-        if mins:
-            tm += "%d %s, " % (mins, self.m(mins%10))
-        if secs:
-            tm += "%d %s" % (secs, self.s(secs%10))
-        return tm
+
 
 
 
@@ -179,6 +147,48 @@ class Processing:
         self.user.thingsStatistics = self.req['state']['user'].get('0', {})
         self.user.lastThingName = self.req['state']['user'].get('1', '')
         self.ans = self.req['request']['original_utterance'].lower().split()
+
+    def h(self, dig):
+        if dig == 1:
+            return "час"
+        if (dig == 0) or (dig >= 5):
+            return "часов"
+        if (dig == 2) or (dig == 3) or (dig == 4):
+            return "часа"
+
+    def m(self, dig):
+        if dig == 1:
+            return "минута"
+        if (dig == 0) or (dig >= 5):
+            return "минут"
+        if (dig == 2) or (dig == 3) or (dig == 4):
+            return "минуты"
+
+    def s(self, dig):
+        if dig == 1:
+            return "секунда"
+        if (dig == 0) or (dig >= 5):
+            return "секунд"
+        if (dig == 2) or (dig == 3) or (dig == 4):
+            return "секунды"
+
+    def secsToTime(self, val):
+        secs_all = val
+        tm = ''
+        secs = secs_all % 60
+        mins = secs_all // 60
+        hours = secs_all // 3600
+        if hours:
+            tm += "%d %s, " % (hours, self.h(hours % 10))
+        if mins:
+            tm += "%d %s, " % (mins, self.m(mins % 10))
+        if secs:
+            tm += "%d %s" % (secs, self.s(secs % 10))
+        return tm
+
+
+
+
     def initUser(self):
         self.res['user_state_update'] = self.req['state']['user']
         self.res['response']['buttons'] = self.get_suggests(self.user_id)
@@ -274,7 +284,7 @@ class Processing:
             return
         self.res['response']['text'] = self.res['response'].get('text', '')+"Статистика на сегодня: \n"
         for key, value in self.user.thingsStatistics.items():
-            self.res['response']['text'] += str(key) + ' --- ' + self.user.secsToTime(key) + '\n'
+            self.res['response']['text'] += str(key) + ' --- ' + self.secsToTime(value) + '\n'
 
     def dup1(self):
 
