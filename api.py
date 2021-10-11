@@ -250,7 +250,7 @@ class Processing:
 		self.res['user_state_update']['0'] = self.user.thingsStatistics
 		self.res['user_state_update']['1'] = self.user.lastThingName
 		self.res['user_state_update']['new'] = 'no'
-		self.res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
+		# self.res['user_state_update']['2'] = datetime.now(IST).isoformat()[:10]
 		return
 
 	def variants(self):
