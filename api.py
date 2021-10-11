@@ -143,11 +143,11 @@ class Processing:
 		mins = val // 60
 		hours = val // 3600
 		if hours:
-			tm += "%d %s, " % (hours, self.h(hours % 10))
+			tm += "%d %s, " % (hours, self.h(hours % 10)) if (hours<=10) or (hours >= 20) else "%d %s, " % (hours, self.h(0))
 		if mins:
-			tm += "%d %s, " % (mins, self.m(mins % 10))
+			tm += "%d %s, " % (mins, self.m(mins % 10)) if (mins<=10) or (mins >= 20) else "%d %s, " % (mins, self.m(0))
 		if secs:
-			tm += "%d %s" % (secs, self.s(secs % 10))
+			tm += "%d %s" % (secs, self.s(secs % 10)) if (secs<=10) or (secs >= 20) else "%d %s, " % (secs, self.s(0))
 		return tm
 
 	def contUser(self):
@@ -185,7 +185,6 @@ class Processing:
 		              'время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу. ' \
 		              'Для настройки скажите кодовое слово Настройка. Для инструкции по использованию навыка скажите ' \
 		              'Как пользоваться?'
-		# TODO: Make documentation inside the bot
 		# TODO: Make settings
 
 		self.dup1()
@@ -264,12 +263,17 @@ class Processing:
 				tr = list(self.user.thingsStatistics.keys())
 				for key in tr.copy():
 					self.user.removeThing(key)
+				tempBool = True
 			else:
+				tempBool = False
 				tt = ''
 				for i in self.ans[1:]:
 					tt += i + ' '
-				self.user.removeThing(tt[:-1])
-			self.res['response']['text'] = "Готово"
+				tempBool = self.user.removeThing(tt[:-1])
+			if tempBool:
+				self.res['response']['text'] = "Готово"
+			else:
+				self.res['response']['text'] = "Не получилось найти это дело. Попробуйте ещё раз."
 			self.dup1()
 			return
 		if self.req['request']['original_utterance'].lower() not in self.user.thingsStatistics:
@@ -308,11 +312,31 @@ class Processing:
 			self.res['response']['end_session'] = True
 			return
 		if self.req['request']['original_utterance'].lower() in [
+			"как пользоваться",
+			"документация"
+		]:
+			self.res['response']['text'] = "Документация: \n" \
+			"Для добавления дела в список дел и начала отсчёта просто скажите его название. \n" \
+			"Помните, что тайм-трекер не умеет обрабатывать падежи и формы названий ваших дел. Поэтому всегда " \
+			                               "произносите названия " \
+											"так, как вы хотели бы их услышать при перечислении. \n" \
+			"Правильный пример: 'Работа', 'Прогулка', и т. д. Старайтесь использовать существительные в именительном " \
+			                                "падеже. \n\n" \
+			"Для изменения одного названия на другое скажите 'Замени <текущее название> " \
+			                               "на <замена названию>'\n" \
+			                               "Например: 'Замени прогулка на обед' \n" \
+			"Для удаления названия из списка скажите 'Удали <название>' \n" \
+			"Для остановки отсчёта времени скажите 'Остановить'. Произносить название дела не нужно. \n"
+			self.dup1()
+			return
+
+		if self.req['request']['original_utterance'].lower() in [
 			"статистика",
 			"прочитай статистику",
 		]:
 			if not self.user.thingsStatistics:
 				self.res['response']['text'] = "Вы сегодня ничего не делали."
+				self.dup1()
 			else:
 				self.stats()
 			return
