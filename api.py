@@ -420,7 +420,7 @@ class Processing:
             self.projWrap(self.mainA, tt)
         else:
             self.projWrap(self.mainA)
-        # self.res["response"]["text"] = "Готово."
+        self.res["response"]["text"] = "Готово."
         self.dup2()
         return
 
