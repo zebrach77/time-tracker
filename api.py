@@ -333,7 +333,7 @@ class Processing:
             "настройки",
             "настройка"
         ]:
-            # self.res['user_state_update']['mode'] = 1
+            self.res['user_state_update']['mode'] = 1
             self.res['response']['text'] = 'Добро пожаловать в меню настройки! \n' \
                                            'Здесь пока ничего нет, если у вас есть идеи, что сюда добавить, ' \
                                            'напишите на почту разработчику:\n' \
