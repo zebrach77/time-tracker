@@ -13,6 +13,10 @@ from flask import Flask, request
 IST = pytz.timezone('Europe/Moscow')
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
+
+
+
+
 # Хранилище данных о сессиях.
 
 # client = pymongo.MongoClient(
