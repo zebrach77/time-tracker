@@ -394,9 +394,12 @@ class Processing:
         self.variants()
         return
 
-    def projWrap(self, func_without_proj, projName):
+    def projWrap(self, func_without_proj, projName = ''):
         def wrapper(*args, **kwargs):
-            self.user.getProjStats(projName)
+            if projName:
+                self.user.getProjStats(projName)
+            else:
+                self.user.getProjStats(self.user.lastProjectName)
             res = func_without_proj(*args, **kwargs)
             return res
 
@@ -409,13 +412,15 @@ class Processing:
             tt = ''
             for i in self.ans[2:]:
                 tt += i + ' '
-            return self.projWrap(self.mainA, tt)
+            self.projWrap(self.mainA, tt)
         elif "проект" in self.ans:
             tt = ''
             for i in self.ans[1:]:
                 tt += i + ' '
-            return self.projWrap(self.mainA, tt)
-        self.res["response"]["text"] = "Готово."
+            self.projWrap(self.mainA, tt)
+        else:
+            self.projWrap(self.mainA)
+        # self.res["response"]["text"] = "Готово."
         self.dup2()
         return
 
