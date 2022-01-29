@@ -404,8 +404,8 @@ class Processing:
 
     def mainAProj(self):
         answ = self.req['request']['original_utterance'].lower()
-        if ("добавь проект" in answ) or (["новый", "проект"] in answ) or (["смени", "проект"] in answ) or (
-                ["другой", "проект"] in answ):
+        if ("добавь проект" in answ) or ("новый проект" in answ) or ("смени проект" in answ) or (
+                "другой проект" in answ):
             tt = ''
             for i in self.ans[2:]:
                 tt += i + ' '
