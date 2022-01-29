@@ -415,6 +415,9 @@ class Processing:
             for i in self.ans[1:]:
                 tt += i + ' '
             return self.projWrap(self.mainA, tt)
+        self.res["response"]["text"] = "Готово."
+        self.dup2()
+        return
 
     def mainConfig(self):
         if self.req['request']['original_utterance'].lower() in [
