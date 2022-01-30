@@ -15,8 +15,6 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 
-
-
 # Хранилище данных о сессиях.
 
 # client = pymongo.MongoClient(
@@ -203,7 +201,6 @@ class Processing:
                       'время, которое вы потратите на это дело. Статистика будет доступна по вашему запросу. ' \
                       'Для настройки скажите кодовое слово Настройка. Для инструкции по использованию навыка скажите ' \
                       'Как пользоваться?'
-
 
         self.dup1()
 
@@ -394,16 +391,13 @@ class Processing:
         self.variants()
         return
 
-    def projWrap(self, func_without_proj, projName = ''):
-        def wrapper(*args, **kwargs):
-            if projName:
-                self.user.getProjStats(projName)
-            else:
-                self.user.getProjStats(self.user.lastProjectName)
-            res = func_without_proj(*args, **kwargs)
-            return res
-
-        return wrapper
+    def projWrap(self, func_without_proj, projName=''):
+        if projName:
+            self.user.getProjStats(projName)
+        else:
+            self.user.getProjStats(self.user.lastProjectName)
+        func_without_proj()
+        return
 
     def mainAProj(self):
         answ = self.req['request']['original_utterance'].lower()
